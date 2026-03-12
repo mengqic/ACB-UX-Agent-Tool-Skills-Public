@@ -69,7 +69,8 @@ Design-system-acb values (40px height, 12px font, 600 weight) are **fallbacks on
 4. **Use the Hover state for hover** – Do not guess hover colors. Use the fill/stroke from the frame explicitly named "State=Hover" (or "Hover").
 5. **Use the Active state for pressed and selected** – (a) For action buttons: on mouseDown, show the fill from Figma **State=Active**. (b) For tabs/toolbar: when `active` prop is true, show State=Active. Never use State=Focus for either.
 6. **Extract exact Active color** – Call `get_design_context` on State=Active node. Use its fill hex (e.g. `#014486`). Do NOT assume design-system mapping (e.g. "active = brand-90")—Figma may use brand-80 (#014486) or another shade. Map the extracted hex to the matching token.
-7. **Map to tokens** – After extracting: map each hex to the closest design-system token. If no token matches, add a CSS variable to tokens.css.
+7. **Extract icon color per variant/state** – When the design has icon + text (e.g. "State=Default + Icon"), extract the icon fill from that node. Figma often uses `--color-icon-inverse` (white) for filled variants and `--color-text-link-default` (brand) for outlined. The icon must match the text color for each state (default, hover, active, disabled)—never assume or leave to default.
+8. **Map to tokens** – After extracting: map each hex to the closest design-system token. If no token matches, add a CSS variable to tokens.css.
 
 **When unclear** (e.g. multiple Hover nodes, ambiguous naming)—ask the user.
 
@@ -95,6 +96,7 @@ Map colors and semantics to design-system-acb tokens. Use tokens for:
 - **Pressed state (mouseDown)**: Show Figma State=Active fill for action buttons.
 - **Selected state**: Show Figma State=Active when `active`/`selected` prop is true.
 - **Focus** = keyboard focus ring only. Use `:focus-visible` in CSS so the focus ring appears only when the user tabs to the element, not when they click (which would incorrectly show focus instead of Active pressed state). Add a class like `btn-focus-visible` with `:focus { outline: none }` and `:focus-visible { outline: 2px solid ... }`. Never use `:focus` or React state for focus styling on buttons.
+- **Icon color (critical)** – When a component has an `icon` prop (e.g. Button with icon + text), the icon must use the same color as the text for every state. Use `React.cloneElement(icon, { color: getColor() })` to inject the resolved color token so the icon matches (primary = white, outlined = brand-60, etc.). Icon components must accept a `color` prop and pass it to the SVG `fill`. Do not rely on `currentColor` or inheritance—explicitly pass the same token used for text.
 
 ### Step 6: Save Output
 
@@ -132,6 +134,7 @@ See [examples.md](examples.md) for a full button example.
 - Do not introduce new icon libraries; follow icon-system-acb priority
 - Do not skip clarification when multiple variants or states exist
 - Do not assume output path; ask or use a clear default
+- Do not leave icon color to default or inheritance—always inject the same color token as the text using `React.cloneElement(icon, { color: getColor() })`. Icons that do not receive the explicit color will not match Figma (e.g. wrong color on primary vs outlined).
 
 ## Integration with Figma MCP
 
